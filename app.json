@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "contacts-mobile",
-    "slug": "contacts-mobile",
+    "name": "Ventee",
+    "slug": "ventee-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
