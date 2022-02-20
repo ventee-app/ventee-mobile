@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet } from 'react-native';
 import * as Contacts from 'expo-contacts';
 
@@ -22,22 +22,48 @@ const styles = StyleSheet.create({
   },
 });
 
-async function getContacts() {
+async function getContacts(): Promise<null | Contacts.ContactResponse> {
   const { status } = await Contacts.requestPermissionsAsync();
 
-  if (status === 'granted') {
-    const { data } = await Contacts.getContactsAsync();
-
-    if (data.length > 0) {
-      console.log('DUMP:', JSON.stringify(data));
-    }
+  if (status !== 'granted') {
+    return null;
   }
+
+  return Contacts.getContactsAsync();
 }
 
 export default function TabOneScreen(): React.ReactElement {
+  const [contactsData, setContactsData] = useState<Contacts.Contact[]>([]);
+
   useEffect(
     (): void => {
-      getContacts();
+      getContacts().then((result: null | Contacts.ContactResponse) => {
+        if (result) {
+          const { data } = result;
+          setContactsData(data);
+        }
+      }).catch((error) => {
+        console.log(error);
+      });
+      const WSC = new WebSocket('ws://localhost:9099');
+      WSC.onopen = (): void => {
+        console.log('opened connection');
+      };
+      WSC.onclose = (reason): void => {
+        console.log('closed connection', reason);
+      };
+      WSC.onmessage = (message: MessageEvent): void => {
+        console.log('received message', message.data);
+        try {
+          const parsed = JSON.parse(message.data);
+          if (parsed.event === 'register-connection') {
+            return console.log('register connection with id', parsed.data.connectionId);
+          }
+          return console.log('parsed', parsed);
+        } catch {
+          return console.log('could not parse');
+        }
+      };
     },
     [],
   );
