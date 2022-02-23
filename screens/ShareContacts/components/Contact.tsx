@@ -1,10 +1,13 @@
 import React, { memo } from 'react';
 import Checkbox from 'expo-checkbox';
 import {
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+
+import { COLORS, SPACER } from '../../../constants';
 
 interface ContactProps {
   handleCheckBox: (id: string) => void;
@@ -15,10 +18,17 @@ interface ContactProps {
 
 const styles = StyleSheet.create({
   container: {
+    alignItems: 'center',
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    margin: SPACER,
     width: '100%',
+  },
+  name: {
+    color: COLORS.text,
+    fontSize: SPACER,
+    marginLeft: SPACER / 2,
   },
 });
 
@@ -35,12 +45,18 @@ function Contact(props: ContactProps): React.ReactElement {
   return (
     <View style={styles.container}>
       <Checkbox
-        value={isChecked}
+        color={COLORS.accent}
         onValueChange={handleValueChange}
+        value={isChecked}
       />
-      <Text>
-        { name }
-      </Text>
+      <Pressable
+        onPress={handleValueChange}
+        style={styles.name}
+      >
+        <Text>
+          { name }
+        </Text>
+      </Pressable>
     </View>
   );
 }

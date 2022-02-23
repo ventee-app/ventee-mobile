@@ -1,6 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -8,7 +15,7 @@ import {
 } from 'react-native';
 import * as Contacts from 'expo-contacts';
 import QR from 'react-native-qrcode-svg';
-import { BarCodeScanner } from 'expo-barcode-scanner';
+import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 
 import { BACKEND_URL, EVENTS } from '../../constants';
 import Contact from './components/Contact';
@@ -55,12 +62,15 @@ interface RegisterConnectionData {
   connectionId: string;
 }
 
-export default function TabOneScreen(): React.ReactElement {
+function ShareContacts(): React.ReactElement {
   const [connectionId, setConnectionId] = useState<string>('');
   const [contactsData, setContactsData] = useState<ExtendedContact[]>([]);
-  const [dataForTransfer, setDataForTransfer] = useState<string>('');
+  const [dataForTransfer, setDataForTransfer] = useState<ExtendedContact[]>([]);
   const [isScanned, setIsScanned] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [connection, setConnection] = useState<null | WebSocket>(null);
 
   useEffect(
     (): void => {
@@ -76,52 +86,53 @@ export default function TabOneScreen(): React.ReactElement {
         console.log(error);
       });
       const WSC = new WebSocket(BACKEND_URL);
-      WSC.onopen = (): void => {
-        console.log('opened connection');
-      };
-      WSC.onclose = (reason): void => {
-        console.log('closed connection', reason);
-      };
+      WSC.onopen = (): void => setConnection(WSC);
+      WSC.onclose = (): void => setConnection(null);
       WSC.onmessage = (
         message: MessageEvent<string>,
-      ): void => {
-        console.log('received message', message.data);
+      ): Promise<any[]> | void => {
         try {
-          const parsed: WebsocketMessageData<RegisterConnectionData> = JSON.parse(message.data);
+          const parsed: WebsocketMessageData = JSON.parse(message.data);
+
           if (parsed.event === EVENTS.registerConnection && parsed.data) {
-            return setConnectionId(parsed.data.connectionId);
+            const payload: RegisterConnectionData = JSON.parse(parsed?.data);
+            console.log(`${Platform.OS}`, 'registered as', payload.connectionId);
+            return setConnectionId(payload.connectionId);
           }
-          return console.log('parsed', parsed);
-        } catch {
-          return console.log('could not parse');
+
+          if (parsed.event === EVENTS.requestContacts
+            && parsed.issuer && parsed.target) {
+            console.log(`${Platform.OS}`, 'requested contacts to', parsed.issuer);
+            return WSC.send(JSON.stringify({
+              data: JSON.stringify({
+                contacts: dataForTransfer,
+              }),
+              event: EVENTS.transferContacts,
+              issuer: connectionId,
+              target: parsed.issuer,
+            }));
+          }
+
+          if (parsed.event === EVENTS.transferContacts
+            && parsed.data
+            && parsed.issuer
+            && parsed.target) {
+            console.log(`${Platform.OS}`, 'transfered contacts from', parsed.issuer);
+            const payload = JSON.parse(parsed.data);
+            const promises = payload?.contacts.map(
+              (contact: Contacts.Contact) => Contacts.addContactAsync(contact),
+            );
+            return Promise.all(promises);
+          }
+
+          return console.log('did not handle the event', parsed, Platform.OS);
+        } catch (error) {
+          return console.log('ERROR: could not parse', error);
         }
       };
     },
     [],
   );
-
-  // const handlePress = async () => {
-  //   if (Platform.OS === 'ios') {
-  //     const id = await Contacts.addContactAsync(
-  //       {
-  //         contactType: 'person',
-  //         phoneNumbers: [
-  //           {
-  //             label: 'work',
-  //             id: '516',
-  //             isPrimary: false,
-  //             number: '',
-  //           },
-  //         ],
-  //         firstName: '',
-  //         name: '',
-  //         id: '197',
-  //         imageAvailable: false,
-  //       },
-  //     );
-  //     console.log('ID:', id);
-  //   }
-  // };
 
   const handleCheckBox = (id: string): void => {
     setContactsData(
@@ -134,18 +145,31 @@ export default function TabOneScreen(): React.ReactElement {
     );
   };
 
-  const handleGenerateQR = (): void => setDataForTransfer(JSON.stringify({
-    data: contactsData.filter((item: ExtendedContact): boolean => item.isChecked),
-    event: EVENTS.transferContacts,
-  }));
+  const handleGenerateQR = (): void => setDataForTransfer(
+    contactsData.filter((item: ExtendedContact): boolean => item.isChecked),
+  );
 
-  const handleScanQR = (): void => setIsScanning(true);
-
-  const handleScanResult = (result: any): void => {
-    console.log(result);
-    setIsScanning(false);
-    setIsScanned(true);
+  const handleScanQR = async (): Promise<void> => {
+    await BarCodeScanner.requestPermissionsAsync();
+    setIsScanning(true);
   };
+
+  const handleScanResult = useCallback(
+    (result: BarCodeScannerResult): null | void => {
+      if (!connection) {
+        return null;
+      }
+      connection.send(JSON.stringify({
+        event: EVENTS.requestContacts,
+        issuer: connectionId,
+        target: result.data,
+      }));
+      setIsScanning(false);
+      setIsScanned(true);
+      return setLoading(true);
+    },
+    [connectionId],
+  );
 
   const renderItem = ({ item }: any): React.ReactElement => (
     <Contact
@@ -175,7 +199,7 @@ export default function TabOneScreen(): React.ReactElement {
           </Text>
         </Pressable>
       ) }
-      { !!dataForTransfer && (
+      { dataForTransfer.length > 0 && (
         <QR value={connectionId} size={200} />
       ) }
       { !!connectionId && (
@@ -197,3 +221,5 @@ export default function TabOneScreen(): React.ReactElement {
     </View>
   );
 }
+
+export default memo(ShareContacts);

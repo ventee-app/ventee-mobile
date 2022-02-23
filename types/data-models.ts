@@ -1,4 +1,6 @@
-export interface WebsocketMessageData<D = void> {
-  data?: D;
+export interface WebsocketMessageData {
+  data?: string;
   event: string;
+  issuer: string;
+  target: string;
 }
