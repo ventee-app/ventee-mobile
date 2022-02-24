@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react';
 import {
+  Alert,
   FlatList,
   Platform,
   Pressable,
@@ -20,37 +21,17 @@ import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 import { BACKEND_URL, EVENTS } from '../../constants';
 import Contact from './components/Contact';
 import { WebsocketMessageData } from '../../types/data-models';
+import styles from './styles';
 
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#aabbff',
-    color: 'black',
-    margin: 16,
-    padding: 16,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-});
-
+/**
+ * Get stored contacts
+ * @returns {Promise<null | Contacts.ContactResponse>}
+ */
 async function getContacts(): Promise<null | Contacts.ContactResponse> {
   const { status } = await Contacts.requestPermissionsAsync();
-
   if (status !== 'granted') {
     return null;
   }
-
   return Contacts.getContactsAsync();
 }
 
@@ -185,8 +166,11 @@ function ShareContacts(): React.ReactElement {
       { contactsData.length > 0 && (
         <FlatList
           data={contactsData}
-          renderItem={renderItem}
           keyExtractor={(item: ExtendedContact): string => item.id}
+          renderItem={renderItem}
+          style={{
+            maxWidth: '100%',
+          }}
         />
       ) }
       { contactsData.length > 0 && !!connectionId && (
@@ -194,7 +178,7 @@ function ShareContacts(): React.ReactElement {
           onPress={handleGenerateQR}
           style={styles.button}
         >
-          <Text>
+          <Text style={styles.buttonText}>
             Transfer contacts
           </Text>
         </Pressable>
@@ -207,7 +191,7 @@ function ShareContacts(): React.ReactElement {
           onPress={handleScanQR}
           style={styles.button}
         >
-          <Text>
+          <Text style={styles.buttonText}>
             Scan the code
           </Text>
         </Pressable>
