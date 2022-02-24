@@ -1,8 +1,8 @@
 import React, {
   memo,
   useCallback,
+  useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import {
@@ -20,8 +20,8 @@ import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 
 import { BACKEND_URL, EVENTS } from '../../constants';
 import Contact from './components/Contact';
-import { WebsocketMessageData } from '../../types/data-models';
 import styles from './styles';
+import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
 
 /**
  * Get stored contacts
@@ -33,10 +33,6 @@ async function getContacts(): Promise<null | Contacts.ContactResponse> {
     return null;
   }
   return Contacts.getContactsAsync();
-}
-
-interface ExtendedContact extends Contacts.Contact {
-  isChecked: boolean;
 }
 
 interface RegisterConnectionData {
@@ -51,8 +47,6 @@ function ShareContacts(): React.ReactElement {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const [connection, setConnection] = useState<null | WebSocket>(null);
-
   useEffect(
     (): void => {
       getContacts().then((result: null | Contacts.ContactResponse): void => {
@@ -66,51 +60,51 @@ function ShareContacts(): React.ReactElement {
       }).catch((error) => {
         console.log(error);
       });
-      const WSC = new WebSocket(BACKEND_URL);
-      WSC.onopen = (): void => setConnection(WSC);
-      WSC.onclose = (): void => setConnection(null);
-      WSC.onmessage = (
-        message: MessageEvent<string>,
-      ): Promise<any[]> | void => {
-        try {
-          const parsed: WebsocketMessageData = JSON.parse(message.data);
 
-          if (parsed.event === EVENTS.registerConnection && parsed.data) {
-            const payload: RegisterConnectionData = JSON.parse(parsed?.data);
-            console.log(`${Platform.OS}`, 'registered as', payload.connectionId);
-            return setConnectionId(payload.connectionId);
+      if (connection) {
+        connection.onmessage = (
+          message: MessageEvent<string>,
+        ): Promise<any[]> | void => {
+          try {
+            const parsed: WebsocketMessageData = JSON.parse(message.data);
+
+            if (parsed.event === EVENTS.registerConnection && parsed.data) {
+              const payload: RegisterConnectionData = JSON.parse(parsed?.data);
+              console.log(`${Platform.OS}`, 'registered as', payload.connectionId);
+              return setConnectionId(payload.connectionId);
+            }
+
+            if (parsed.event === EVENTS.requestContacts
+              && parsed.issuer && parsed.target) {
+              console.log(`${Platform.OS}`, 'requested contacts to', parsed.issuer);
+              return connection.send(JSON.stringify({
+                data: JSON.stringify({
+                  contacts: dataForTransfer,
+                }),
+                event: EVENTS.transferContacts,
+                issuer: connectionId,
+                target: parsed.issuer,
+              }));
+            }
+  
+            if (parsed.event === EVENTS.transferContacts
+              && parsed.data
+              && parsed.issuer
+              && parsed.target) {
+              console.log(`${Platform.OS}`, 'transfered contacts from', parsed.issuer);
+              const payload = JSON.parse(parsed.data);
+              const promises = payload?.contacts.map(
+                (contact: Contacts.Contact) => Contacts.addContactAsync(contact),
+              );
+              return Promise.all(promises);
+            }
+  
+            return console.log('did not handle the event', parsed, Platform.OS);
+          } catch (error) {
+            return console.log('ERROR: could not parse', error);
           }
-
-          if (parsed.event === EVENTS.requestContacts
-            && parsed.issuer && parsed.target) {
-            console.log(`${Platform.OS}`, 'requested contacts to', parsed.issuer);
-            return WSC.send(JSON.stringify({
-              data: JSON.stringify({
-                contacts: dataForTransfer,
-              }),
-              event: EVENTS.transferContacts,
-              issuer: connectionId,
-              target: parsed.issuer,
-            }));
-          }
-
-          if (parsed.event === EVENTS.transferContacts
-            && parsed.data
-            && parsed.issuer
-            && parsed.target) {
-            console.log(`${Platform.OS}`, 'transfered contacts from', parsed.issuer);
-            const payload = JSON.parse(parsed.data);
-            const promises = payload?.contacts.map(
-              (contact: Contacts.Contact) => Contacts.addContactAsync(contact),
-            );
-            return Promise.all(promises);
-          }
-
-          return console.log('did not handle the event', parsed, Platform.OS);
-        } catch (error) {
-          return console.log('ERROR: could not parse', error);
-        }
-      };
+        };
+      }
     },
     [],
   );
