@@ -18,13 +18,21 @@ import context, { ContextStorage } from '../../store';
 import { EVENTS } from '../../constants';
 import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
 import styles from './styles';
+import useWebsockets from '../../hooks/use-websockets';
 
 interface TransferContactsData {
   contacts: Contacts.Contact[];
 }
 
 function ReceiveContacts(): React.ReactElement {
-  const { store: { connection, connectionId } = {} } = useContext<ContextStorage>(context);
+  const {
+    store: {
+      connection,
+      connectionId,
+    } = {},
+    dispatch,
+  } = useContext<ContextStorage>(context);
+  useWebsockets({ connection, dispatch });
 
   const [loadedContacts, setLoadedContacts] = useState<ExtendedContact[]>([]);
   const [loading, setLoading] = useState<boolean>(false);

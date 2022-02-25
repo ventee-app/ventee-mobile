@@ -6,7 +6,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  Alert,
   FlatList,
   Platform,
   Pressable,
@@ -18,10 +17,12 @@ import * as Contacts from 'expo-contacts';
 import QR from 'react-native-qrcode-svg';
 import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 
-import { BACKEND_URL, EVENTS } from '../../constants';
+import context, { ContextStorage } from '../../store';
+import { EVENTS } from '../../constants';
 import Contact from './components/Contact';
 import styles from './styles';
 import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
+import useWebsockets from '../../hooks/use-websockets';
 
 /**
  * Get stored contacts
@@ -35,17 +36,20 @@ async function getContacts(): Promise<null | Contacts.ContactResponse> {
   return Contacts.getContactsAsync();
 }
 
-interface RegisterConnectionData {
-  connectionId: string;
-}
-
 function ShareContacts(): React.ReactElement {
-  const [connectionId, setConnectionId] = useState<string>('');
+  const {
+    store: {
+      connection,
+      connectionId,
+    } = {},
+    dispatch,
+  } = useContext<ContextStorage>(context);
+  useWebsockets({ connection, dispatch });
+
   const [contactsData, setContactsData] = useState<ExtendedContact[]>([]);
   const [dataForTransfer, setDataForTransfer] = useState<ExtendedContact[]>([]);
   const [isScanned, setIsScanned] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(
     (): void => {
@@ -68,12 +72,6 @@ function ShareContacts(): React.ReactElement {
           try {
             const parsed: WebsocketMessageData = JSON.parse(message.data);
 
-            if (parsed.event === EVENTS.registerConnection && parsed.data) {
-              const payload: RegisterConnectionData = JSON.parse(parsed?.data);
-              console.log(`${Platform.OS}`, 'registered as', payload.connectionId);
-              return setConnectionId(payload.connectionId);
-            }
-
             if (parsed.event === EVENTS.requestContacts
               && parsed.issuer && parsed.target) {
               console.log(`${Platform.OS}`, 'requested contacts to', parsed.issuer);
@@ -86,7 +84,7 @@ function ShareContacts(): React.ReactElement {
                 target: parsed.issuer,
               }));
             }
-  
+
             if (parsed.event === EVENTS.transferContacts
               && parsed.data
               && parsed.issuer
@@ -98,7 +96,7 @@ function ShareContacts(): React.ReactElement {
               );
               return Promise.all(promises);
             }
-  
+
             return console.log('did not handle the event', parsed, Platform.OS);
           } catch (error) {
             return console.log('ERROR: could not parse', error);
@@ -140,8 +138,7 @@ function ShareContacts(): React.ReactElement {
         target: result.data,
       }));
       setIsScanning(false);
-      setIsScanned(true);
-      return setLoading(true);
+      return setIsScanned(true);
     },
     [connectionId],
   );

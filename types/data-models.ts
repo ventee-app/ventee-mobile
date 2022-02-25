@@ -11,6 +11,10 @@ export interface ExtendedContact extends Contact {
   isChecked: boolean;
 }
 
+export interface RegisterConnectionData {
+  connectionId: string;
+}
+
 export interface Store {
   connection: WebSocket | null;
   connectionId: string;
