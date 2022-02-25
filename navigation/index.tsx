@@ -39,7 +39,11 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function RootNavigator() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Root" component={BottomTabNavigator} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Root"
+        component={BottomTabNavigator}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
         <Stack.Screen name="Modal" component={ModalScreen} />
@@ -62,6 +66,10 @@ function BottomTabNavigator() {
       initialRouteName="TabOne"
       screenOptions={{
         tabBarActiveTintColor: COLORS.accent,
+        tabBarStyle: {
+          backgroundColor: COLORS.background,
+          borderTopWidth: 0,
+        },
         tabBarShowLabel: false,
       }}
     >
@@ -70,6 +78,12 @@ function BottomTabNavigator() {
         component={TabOneScreen}
         options={{
           title: 'Share contacts',
+          headerTitleStyle: {
+            color: COLORS.text,
+          },
+          headerStyle: {
+            backgroundColor: COLORS.background,
+          },
           tabBarIcon: ({ color }) => <TabBarIcon name="share-square-o" color={color} />,
         }}
       />
@@ -79,6 +93,12 @@ function BottomTabNavigator() {
         options={({ navigation }: RootTabScreenProps<'TabTwo'>) => ({
           title: 'Receive contacts',
           tabBarIcon: ({ color }) => <TabBarIcon name="qrcode" color={color} />,
+          headerTitleStyle: {
+            color: COLORS.text,
+          },
+          headerStyle: {
+            backgroundColor: COLORS.background,
+          },
           headerRight: () => (
             <Pressable
               onPress={() => navigation.navigate('Modal')}

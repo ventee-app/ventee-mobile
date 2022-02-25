@@ -19,4 +19,8 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
+  scanner: {
+    height: '80%',
+    width: '100%',
+  },
 });

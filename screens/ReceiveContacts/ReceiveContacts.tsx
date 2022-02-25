@@ -1,12 +1,12 @@
 import React, {
   memo,
+  useCallback,
   useContext,
   useEffect,
   useState,
 } from 'react';
 import {
   Alert,
-  Platform,
   Pressable,
   Text,
   View,
@@ -45,12 +45,21 @@ function ReceiveContacts(): React.ReactElement {
     if (parsed.event === EVENTS.transferContacts
       && parsed.data && parsed.issuer
       && parsed.target === connectionId) {
-      console.log(`${Platform.OS}`, 'transferred contacts from', parsed.issuer);
       const payload: TransferContactsData = JSON.parse(parsed.data);
       setLoadedContacts(payload.contacts.map((item: Contacts.Contact): ExtendedContact => ({
         ...item,
         isChecked: true,
       })));
+
+      if (connection && connectionId) {
+        connection.send(JSON.stringify({
+          event: EVENTS.transferComplete,
+          issuer: connectionId,
+          target: parsed.issuer,
+        }));
+      }
+
+      setLoading(false);
     }
   };
 
@@ -73,26 +82,32 @@ function ReceiveContacts(): React.ReactElement {
 
   const handleCancelScanning = (): void => setScanning(false);
 
-  const handleScanningResult = (result: BarCodeScannerResult): void => {
-    setScanned(true);
-    setScanning(false);
+  const handleScanningResult = useCallback(
+    (result: BarCodeScannerResult): void => {
+      setScanned(true);
+      setScanning(false);
 
-    const { data } = result;
+      const { data } = result;
 
-    if (!(connection && connectionId)) {
-      return Alert.alert(
-        'Server connection failed!',
-        'Could not connect to the server!',
-      );
-    }
+      if (!(connection && connectionId)) {
+        return Alert.alert(
+          'Server connection failed!',
+          'Could not connect to the server!',
+        );
+      }
 
-    setLoading(true);
-    return connection.send(JSON.stringify({
-      event: EVENTS.requestContacts,
-      issuer: connectionId,
-      target: data,
-    }));
-  };
+      setLoading(true);
+      return connection.send(JSON.stringify({
+        event: EVENTS.requestContacts,
+        issuer: connectionId,
+        target: data,
+      }));
+    },
+    [
+      connection,
+      connectionId,
+    ],
+  );
 
   const handleStartScanning = async (): Promise<void> => {
     const { status } = await BarCodeScanner.requestPermissionsAsync();
@@ -107,7 +122,12 @@ function ReceiveContacts(): React.ReactElement {
 
   return (
     <View style={styles.container}>
-      { !scanned && !scanning && (
+      { loading && (
+        <Text>
+          Loading...
+        </Text>
+      ) }
+      { !loading && !scanned && !scanning && (
         <Pressable
           onPress={handleStartScanning}
           style={styles.button}
@@ -117,14 +137,11 @@ function ReceiveContacts(): React.ReactElement {
           </Text>
         </Pressable>
       ) }
-      { !scanned && scanning && (
+      { !loading && !scanned && scanning && (
         <>
           <BarCodeScanner
             onBarCodeScanned={scanned ? undefined : handleScanningResult}
-            style={{
-              width: '100%',
-              height: '80%',
-            }}
+            style={styles.scanner}
           />
           <Pressable
             onPress={handleCancelScanning}
@@ -135,6 +152,13 @@ function ReceiveContacts(): React.ReactElement {
             </Text>
           </Pressable>
         </>
+      ) }
+      { !loading && scanned && !scanning && loadedContacts.length > 0 && (
+        <View>
+          <Text>
+            { `Total: ${loadedContacts.length} contacts received` }
+          </Text>
+        </View>
       ) }
     </View>
   );

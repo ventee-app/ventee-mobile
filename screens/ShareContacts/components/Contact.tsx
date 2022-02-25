@@ -34,7 +34,14 @@ function Contact(props: ContactProps): React.ReactElement {
         value={isChecked}
       />
       <Pressable onPress={handleValueChange}>
-        <Text style={styles.contactName}>
+        <Text
+          style={{
+            ...styles.contactName,
+            color: !isChecked
+              ? COLORS.textMuted
+              : styles.contactName.color,
+          }}
+        >
           { name }
         </Text>
       </Pressable>
