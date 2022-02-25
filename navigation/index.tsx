@@ -13,7 +13,7 @@ import { COLORS } from '../constants';
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
-import ModalScreen from '../screens/ModalScreen';
+import ModalScreen from '../screens/About';
 import NotFoundScreen from '../screens/NotFoundScreen';
 import TabOneScreen from '../screens/ShareContacts';
 import TabTwoScreen from '../screens/ReceiveContacts';

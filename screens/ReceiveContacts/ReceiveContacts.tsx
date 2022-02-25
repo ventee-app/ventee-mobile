@@ -17,6 +17,7 @@ import * as Contacts from 'expo-contacts';
 import context, { ContextStorage } from '../../store';
 import { EVENTS } from '../../constants';
 import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
+import Spinner from '../../components/Spinner';
 import styles from './styles';
 import useWebsockets from '../../hooks/use-websockets';
 
@@ -123,9 +124,7 @@ function ReceiveContacts(): React.ReactElement {
   return (
     <View style={styles.container}>
       { loading && (
-        <Text>
-          Loading...
-        </Text>
+        <Spinner />
       ) }
       { !loading && !scanned && !scanning && (
         <Pressable

@@ -18,13 +18,10 @@ import Contact from './components/Contact';
 import context, { ContextStorage } from '../../store';
 import { EVENTS } from '../../constants';
 import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
+import Spinner from '../../components/Spinner';
 import styles from './styles';
 import useWebsockets from '../../hooks/use-websockets';
 
-/**
- * Get stored contacts
- * @returns {Promise<null | Contacts.ContactResponse>}
- */
 async function getContacts(): Promise<null | Contacts.ContactResponse> {
   const { status } = await Contacts.requestPermissionsAsync();
   if (status !== 'granted') {
@@ -68,8 +65,6 @@ function ShareContacts(): React.ReactElement {
           'Contacts request failed',
           'Failed to load the contacts!',
         );
-      }).finally(() => {
-        setLoading(false);
       });
     },
     [],
@@ -78,6 +73,8 @@ function ShareContacts(): React.ReactElement {
   useEffect(
     (): void => {
       if (connection && connectionId) {
+        setLoading(false);
+
         connection.onmessage = (
           message: MessageEvent<string>,
         ): void => {
@@ -136,9 +133,7 @@ function ShareContacts(): React.ReactElement {
   return (
     <View style={styles.container}>
       { loading && (
-        <Text>
-          Loading...
-        </Text>
+        <Spinner />
       ) }
       { !loading && contactsData.length > 0 && (
         <FlatList
