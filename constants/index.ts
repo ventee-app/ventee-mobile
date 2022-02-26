@@ -1,5 +1,5 @@
 // export const BACKEND_URL = 'ws://localhost:9099';
-export const BACKEND_URL = 'ws://localhost:9099';
+export const BACKEND_URL = 'ws://192.168.0.152:9099';
 
 export const COLORS = {
   accent: '#6600FF',

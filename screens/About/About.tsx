@@ -1,21 +1,43 @@
 import React, { memo } from 'react';
 import {
-  Platform,
+  Linking,
+  Pressable,
   Text,
   View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
 import styles from './styles';
 
 function About() {
+  const handleLink = (link: string): Promise<void> => Linking.openURL(link);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Modal</Text>
-      <View style={styles.separator} />
-
-      {/* Use a light status bar on iOS to account for the black space above the modal */}
-      <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
+      <Text style={styles.title}>
+        Ventee
+      </Text>
+      <Text style={styles.description}>
+        By peterdee, 2022
+      </Text>
+      <Text style={styles.description}>
+        More stuff:
+      </Text>
+      <Pressable
+        onPress={() => handleLink('https://peterdee.github.com')}
+        style={styles.linkWrap}
+      >
+        <Text style={styles.linkText}>
+          https://peterdee.github.com
+        </Text>
+      </Pressable>
+      <Pressable
+        onPress={() => handleLink('https://dyum.in')}
+        style={styles.linkWrap}
+      >
+        <Text style={styles.linkText}>
+          https://dyum.in
+        </Text>
+      </Pressable>
     </View>
   );
 }

@@ -1,18 +1,31 @@
 import { StyleSheet } from 'react-native';
 
+import { COLORS, SPACER } from '../../constants';
+
 export default StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
+    backgroundColor: COLORS.background,
+    flex: 1,
     justifyContent: 'center',
   },
   title: {
-    fontSize: 20,
+    color: COLORS.accent,
+    fontSize: SPACER * 2,
     fontWeight: 'bold',
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  description: {
+    color: COLORS.text,
+    fontSize: SPACER + SPACER / 2,
+    marginTop: SPACER,
+    textAlign: 'center',
+  },
+  linkText: {
+    color: COLORS.accent,
+    fontSize: SPACER + SPACER / 2,
+    textDecorationLine: 'underline',
+  },
+  linkWrap: {
+    marginTop: SPACER,
   },
 });
