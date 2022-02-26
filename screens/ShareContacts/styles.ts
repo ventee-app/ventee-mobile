@@ -3,28 +3,15 @@ import { StyleSheet } from 'react-native';
 import { COLORS, SPACER } from '../../constants';
 
 export default StyleSheet.create({
-  button: {
-    backgroundColor: COLORS.accent,
-    margin: SPACER,
-    padding: SPACER,
-  },
-  buttonText: {
-    color: COLORS.textInverted,
-  },
   container: {
     backgroundColor: COLORS.background,
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'flex-start',
+    width: '100%',
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
+  checkBox: {
+    height: SPACER + SPACER / 2,
+    width: SPACER + SPACER / 2,
   },
   contactContainer: {
     alignItems: 'center',
@@ -32,12 +19,39 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     marginHorizontal: SPACER / 2,
-    marginTop: SPACER,
-    maxWidth: '100%',
+    marginVertical: SPACER / 2,
+    width: '100%',
   },
   contactName: {
     color: COLORS.text,
     fontSize: SPACER,
     marginLeft: SPACER / 2,
+  },
+  listControls: {
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderColor: COLORS.accent,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACER / 2,
+    paddingVertical: SPACER / 2,
+  },
+  checkButton: {
+    borderColor: COLORS.accent,
+    padding: SPACER,
+  },
+  checkButtonText: {
+    color: COLORS.accent,
+    textAlign: 'center',
+  },
+  generateQRButton: {
+    backgroundColor: COLORS.accent,
+    flex: 1,
+    padding: SPACER,
+  },
+  generateQRButtonText: {
+    color: COLORS.textInverted,
+    textAlign: 'center',
   },
 });
