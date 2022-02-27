@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import * as Contacts from 'expo-contacts';
-import QR from 'react-native-qrcode-svg';
 
 import context, { ContextStorage } from '../../store';
 import { EVENTS } from '../../constants';
@@ -19,6 +18,8 @@ import Spinner from '../../components/Spinner';
 import styles from './styles';
 import useWebsockets from '../../hooks/use-websockets';
 import List from './components/List';
+import EmptyList from './components/EmptyList';
+import QRCode from './components/QRCode';
 
 async function getContacts(): Promise<null | Contacts.ContactResponse> {
   const { status } = await Contacts.requestPermissionsAsync();
@@ -39,8 +40,8 @@ function ShareContacts(): React.ReactElement {
   useWebsockets({ connection, dispatch });
 
   const [contactsData, setContactsData] = useState<ExtendedContact[]>([]);
-  const [dataForTransfer, setDataForTransfer] = useState<ExtendedContact[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [readyForTransfer, setReadyForTransfer] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
 
   useEffect(
@@ -84,7 +85,7 @@ function ShareContacts(): React.ReactElement {
             setLoading(true);
             connection.send(JSON.stringify({
               data: JSON.stringify({
-                contacts: dataForTransfer,
+                contacts: contactsData.filter((item: ExtendedContact): boolean => item.isChecked),
               }),
               event: EVENTS.transferContacts,
               issuer: connectionId,
@@ -106,6 +107,15 @@ function ShareContacts(): React.ReactElement {
     ],
   );
 
+  const handleCheckAll = (): void => setContactsData(
+    (state: ExtendedContact[]): ExtendedContact[] => state.map(
+      (item: ExtendedContact): ExtendedContact => ({
+        ...item,
+        isChecked: true,
+      }),
+    ),
+  );
+
   const handleCheckBox = (id: string): void => setContactsData(
     (state: ExtendedContact[]): ExtendedContact[] => state.map(
       (item: ExtendedContact): ExtendedContact => ({
@@ -115,23 +125,12 @@ function ShareContacts(): React.ReactElement {
     ),
   );
 
-  const handleGenerateQR = (): void => setDataForTransfer(
-    contactsData.filter((item: ExtendedContact): boolean => item.isChecked),
-  );
-
-  const handleClear = (): void => {
+  const handleClearSearch = (): void => {
     Keyboard.dismiss();
     return setSearch('');
   };
 
-  const handleCheckAll = (): void => setContactsData(
-    (state: ExtendedContact[]): ExtendedContact[] => state.map(
-      (item: ExtendedContact): ExtendedContact => ({
-        ...item,
-        isChecked: true,
-      }),
-    ),
-  );
+  const handleShowQR = (): void => setReadyForTransfer((state: boolean): boolean => !state);
 
   const handleUncheckAll = (): void => setContactsData(
     (state: ExtendedContact[]): ExtendedContact[] => state.map(
@@ -147,20 +146,29 @@ function ShareContacts(): React.ReactElement {
       { loading && (
         <Spinner />
       ) }
-      { !loading && contactsData.length > 0 && (
+      { !loading && !readyForTransfer && contactsData.length > 0 && (
         <List
           contacts={contactsData}
           handleCheckAll={handleCheckAll}
           handleCheckBox={handleCheckBox}
-          handleClear={handleClear}
-          handleGenerateQR={handleGenerateQR}
+          handleClear={handleClearSearch}
+          handleGenerateQR={handleShowQR}
           handleUncheckAll={handleUncheckAll}
           searchValue={search}
           setSearch={setSearch}
         />
       ) }
-      { !loading && dataForTransfer.length > 0 && (
-        <QR value={connectionId} size={200} />
+      { !loading && !readyForTransfer && contactsData.length === 0 && (
+        <EmptyList />
+      ) }
+      { !loading && readyForTransfer && !!connectionId && (
+        <QRCode
+          handleCloseQR={handleShowQR}
+          transferAmount={
+            contactsData.filter((item: ExtendedContact): boolean => item.isChecked).length
+          }
+          value={connectionId}
+        />
       ) }
     </View>
   );
