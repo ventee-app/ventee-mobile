@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import {
   FlatList,
   Pressable,
@@ -43,6 +43,13 @@ function List(props: ListProps): React.ReactElement {
     />
   );
 
+  const generateButtonStatus = useMemo(
+    (): boolean => contacts.filter(
+      (item: ExtendedContact): boolean => item.isChecked,
+    ).length === 0,
+    [contacts],
+  );
+
   return (
     <>
       <Input
@@ -83,8 +90,13 @@ function List(props: ListProps): React.ReactElement {
           </Text>
         </Pressable>
         <Pressable
+          disabled={generateButtonStatus}
           onPress={handleGenerateQR}
-          style={styles.generateQRButton}
+          style={
+            generateButtonStatus
+              ? styles.generateQRButtonDisabled
+              : styles.generateQRButton
+          }
         >
           <Text style={styles.generateQRButtonText}>
             Generate QR

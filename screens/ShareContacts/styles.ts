@@ -50,6 +50,11 @@ export default StyleSheet.create({
     flex: 1,
     padding: SPACER,
   },
+  generateQRButtonDisabled: {
+    backgroundColor: COLORS.textMuted,
+    flex: 1,
+    padding: SPACER,
+  },
   generateQRButtonText: {
     color: COLORS.textInverted,
     textAlign: 'center',
@@ -76,5 +81,9 @@ export default StyleSheet.create({
     fontSize: SPACER,
     marginBottom: SPACER * 2,
     textAlign: 'center',
+  },
+  contactsTransferredText: {
+    fontSize: SPACER + SPACER / 4,
+    marginVertical: SPACER * 2,
   },
 });

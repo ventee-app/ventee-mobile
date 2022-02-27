@@ -12,14 +12,15 @@ import {
 import * as Contacts from 'expo-contacts';
 
 import context, { ContextStorage } from '../../store';
+import EmptyList from './components/EmptyList';
 import { EVENTS } from '../../constants';
 import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
+import List from './components/List';
+import QRCode from './components/QRCode';
 import Spinner from '../../components/Spinner';
 import styles from './styles';
+import TransferComplete from './components/TransferComplete';
 import useWebsockets from '../../hooks/use-websockets';
-import List from './components/List';
-import EmptyList from './components/EmptyList';
-import QRCode from './components/QRCode';
 
 async function getContacts(): Promise<null | Contacts.ContactResponse> {
   const { status } = await Contacts.requestPermissionsAsync();
@@ -43,6 +44,7 @@ function ShareContacts(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(true);
   const [readyForTransfer, setReadyForTransfer] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
+  const [transferComplete, setTransferComplete] = useState<boolean>(true);
 
   useEffect(
     (): void => {
@@ -95,8 +97,8 @@ function ShareContacts(): React.ReactElement {
 
           if (parsed.event && parsed.event === EVENTS.transferComplete
             && parsed.target && parsed.target === connectionId) {
-            // TODO: show a screen after everything is done
             setLoading(false);
+            setTransferComplete(true);
           }
         };
       }
@@ -130,6 +132,11 @@ function ShareContacts(): React.ReactElement {
     return setSearch('');
   };
 
+  const handleCloseTransferComplete = () => {
+    setReadyForTransfer(false);
+    setTransferComplete(false);
+  };
+
   const handleShowQR = (): void => setReadyForTransfer((state: boolean): boolean => !state);
 
   const handleUncheckAll = (): void => setContactsData(
@@ -146,7 +153,8 @@ function ShareContacts(): React.ReactElement {
       { loading && (
         <Spinner />
       ) }
-      { !loading && !readyForTransfer && contactsData.length > 0 && (
+      { !loading && !readyForTransfer
+        && !transferComplete && contactsData.length > 0 && (
         <List
           contacts={contactsData}
           handleCheckAll={handleCheckAll}
@@ -158,10 +166,12 @@ function ShareContacts(): React.ReactElement {
           setSearch={setSearch}
         />
       ) }
-      { !loading && !readyForTransfer && contactsData.length === 0 && (
+      { !loading && !readyForTransfer
+        && !transferComplete && contactsData.length === 0 && (
         <EmptyList />
       ) }
-      { !loading && readyForTransfer && !!connectionId && (
+      { !loading && readyForTransfer
+        && !transferComplete && !!connectionId && (
         <QRCode
           handleCloseQR={handleShowQR}
           transferAmount={
@@ -169,6 +179,9 @@ function ShareContacts(): React.ReactElement {
           }
           value={connectionId}
         />
+      ) }
+      { !loading && transferComplete && (
+        <TransferComplete handleClose={handleCloseTransferComplete} />
       ) }
     </View>
   );
