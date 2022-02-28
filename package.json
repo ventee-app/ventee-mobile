@@ -1,7 +1,12 @@
 {
   "name": "ventee-mobile",
+  "description": "Ventee mobile application",
   "version": "1.0.0",
   "private": true,
+  "author": {
+    "name": "Peter Dyumin",
+    "url": "https://github.com/peterdee"
+  },
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "android": "expo start --android",
@@ -10,6 +15,16 @@
     "lint": "eslint",
     "start": "expo start"
   },
+  "engines": {
+    "node": "^16.0.0",
+    "npm": "^7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ventee-app/ventee-mobile"
+  },
+  "homepage": "https://github.com/ventee-app/ventee-mobile",
+  "license": "MIT",
   "dependencies": {
     "@expo/vector-icons": "^12.0.0",
     "@react-navigation/bottom-tabs": "^6.0.5",

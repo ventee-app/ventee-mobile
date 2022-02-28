@@ -44,7 +44,7 @@ function ShareContacts(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(true);
   const [readyForTransfer, setReadyForTransfer] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
-  const [transferComplete, setTransferComplete] = useState<boolean>(true);
+  const [transferComplete, setTransferComplete] = useState<boolean>(false);
 
   useEffect(
     (): void => {
@@ -70,43 +70,6 @@ function ShareContacts(): React.ReactElement {
       });
     },
     [],
-  );
-
-  useEffect(
-    (): void => {
-      if (connection && connectionId) {
-        setLoading(false);
-
-        connection.onmessage = (
-          message: MessageEvent<string>,
-        ): void => {
-          const parsed: WebsocketMessageData = JSON.parse(message.data);
-
-          if (parsed.event === EVENTS.requestContacts
-            && parsed.issuer && parsed.target) {
-            setLoading(true);
-            connection.send(JSON.stringify({
-              data: JSON.stringify({
-                contacts: contactsData.filter((item: ExtendedContact): boolean => item.isChecked),
-              }),
-              event: EVENTS.transferContacts,
-              issuer: connectionId,
-              target: parsed.issuer,
-            }));
-          }
-
-          if (parsed.event && parsed.event === EVENTS.transferComplete
-            && parsed.target && parsed.target === connectionId) {
-            setLoading(false);
-            setTransferComplete(true);
-          }
-        };
-      }
-    },
-    [
-      connection,
-      connectionId,
-    ],
   );
 
   const handleCheckAll = (): void => setContactsData(
@@ -137,6 +100,31 @@ function ShareContacts(): React.ReactElement {
     setTransferComplete(false);
   };
 
+  const handleIncomingMessage = (message: MessageEvent<string>): void => {
+    const parsed: WebsocketMessageData = JSON.parse(message.data);
+
+    if (parsed.event === EVENTS.requestContacts
+        && parsed.issuer && parsed.target) {
+      setLoading(true);
+      if (connection && connectionId) {
+        connection.send(JSON.stringify({
+          data: JSON.stringify({
+            contacts: contactsData.filter((item: ExtendedContact): boolean => item.isChecked),
+          }),
+          event: EVENTS.transferContacts,
+          issuer: connectionId,
+          target: parsed.issuer,
+        }));
+      }
+    }
+
+    if (parsed.event && parsed.event === EVENTS.transferComplete
+      && parsed.target && parsed.target === connectionId) {
+      setLoading(false);
+      setTransferComplete(true);
+    }
+  };
+
   const handleShowQR = (): void => setReadyForTransfer((state: boolean): boolean => !state);
 
   const handleUncheckAll = (): void => setContactsData(
@@ -146,6 +134,25 @@ function ShareContacts(): React.ReactElement {
         isChecked: false,
       }),
     ),
+  );
+
+  useEffect(
+    (): (() => void) => {
+      if (connection && connectionId) {
+        setLoading(false);
+
+        connection.addEventListener('message', handleIncomingMessage);
+      }
+      return (): void => {
+        if (connection && connectionId) {
+          connection.removeEventListener('message', handleIncomingMessage);
+        }
+      };
+    },
+    [
+      connection,
+      connectionId,
+    ],
   );
 
   return (

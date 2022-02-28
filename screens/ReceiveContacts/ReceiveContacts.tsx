@@ -36,7 +36,7 @@ function ReceiveContacts(): React.ReactElement {
   useWebsockets({ connection, dispatch });
 
   const [loadedContacts, setLoadedContacts] = useState<ExtendedContact[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [scanned, setScanned] = useState<boolean>(false);
   const [scanning, setScanning] = useState<boolean>(false);
 
@@ -67,6 +67,7 @@ function ReceiveContacts(): React.ReactElement {
   useEffect(
     (): (() => void) => {
       if (connection && connectionId) {
+        setLoading(false);
         connection.addEventListener('message', handleMessage);
       }
       return (): void => {
