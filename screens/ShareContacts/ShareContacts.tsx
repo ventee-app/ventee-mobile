@@ -15,7 +15,7 @@ import context, { ContextStorage } from '../../store';
 import EmptyList from './components/EmptyList';
 import { EVENTS } from '../../constants';
 import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
-import List from './components/List';
+import ContactsList from '../../components/ContactsList';
 import QRCode from './components/QRCode';
 import Spinner from '../../components/Spinner';
 import styles from './styles';
@@ -55,12 +55,19 @@ function ShareContacts(): React.ReactElement {
             'Please provide access to the contacts!',
           );
         }
-        const { data } = result;
         return setContactsData(
-          data.map((item: Contacts.Contact): ExtendedContact => ({
-            ...item,
-            isChecked: true,
-          })),
+          result.data.reduce(
+            (array: ExtendedContact[], item: Contacts.Contact): ExtendedContact[] => {
+              if (item.name) {
+                array.push({
+                  ...item,
+                  isChecked: true,
+                });
+              }
+              return array;
+            },
+            [],
+          ),
         );
       }).catch((): void => {
         Alert.alert(
@@ -162,12 +169,13 @@ function ShareContacts(): React.ReactElement {
       ) }
       { !loading && !readyForTransfer
         && !transferComplete && contactsData.length > 0 && (
-        <List
+        <ContactsList
+          actionButtonText="Generate QR"
           contacts={contactsData}
+          handleActionButton={handleShowQR}
           handleCheckAll={handleCheckAll}
           handleCheckBox={handleCheckBox}
-          handleClear={handleClearSearch}
-          handleGenerateQR={handleShowQR}
+          handleClearSearch={handleClearSearch}
           handleUncheckAll={handleUncheckAll}
           searchValue={search}
           setSearch={setSearch}

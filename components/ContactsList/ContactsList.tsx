@@ -7,28 +7,30 @@ import {
 } from 'react-native';
 
 import Contact from './components/Contact';
-import { ExtendedContact } from '../../../types/data-models';
-import Input from '../../../components/Input';
-import styles from '../styles';
+import { ExtendedContact } from '../../types/data-models';
+import Input from '../Input';
+import styles from './styles';
 
-interface ListProps {
+interface ContactListProps {
+  actionButtonText: string;
   contacts: ExtendedContact[];
+  handleActionButton: () => void;
   handleCheckAll: () => void;
   handleCheckBox: (id: string) => void;
-  handleClear: () => void;
-  handleGenerateQR: () => void;
+  handleClearSearch: () => void;
   handleUncheckAll: () => void;
   searchValue: string;
   setSearch: (value: string) => void;
 }
 
-function List(props: ListProps): React.ReactElement {
+function ContactList(props: ContactListProps): React.ReactElement {
   const {
+    actionButtonText,
     contacts,
+    handleActionButton,
     handleCheckAll,
     handleCheckBox,
-    handleClear,
-    handleGenerateQR,
+    handleClearSearch,
     handleUncheckAll,
     searchValue,
     setSearch,
@@ -43,7 +45,7 @@ function List(props: ListProps): React.ReactElement {
     />
   );
 
-  const generateButtonStatus = useMemo(
+  const actionButtonStatus = useMemo(
     (): boolean => contacts.filter(
       (item: ExtendedContact): boolean => item.isChecked,
     ).length === 0,
@@ -53,7 +55,7 @@ function List(props: ListProps): React.ReactElement {
   return (
     <>
       <Input
-        handleClear={handleClear}
+        handleClear={handleClearSearch}
         handleInput={setSearch}
         placeholder="Search"
         value={searchValue}
@@ -62,7 +64,7 @@ function List(props: ListProps): React.ReactElement {
         data={
           searchValue
             ? contacts.filter(
-              (item: ExtendedContact): boolean => item.name.includes(searchValue),
+              ({ name = '' }: ExtendedContact): boolean => name.includes(searchValue),
             )
             : contacts
         }
@@ -90,16 +92,16 @@ function List(props: ListProps): React.ReactElement {
           </Text>
         </Pressable>
         <Pressable
-          disabled={generateButtonStatus}
-          onPress={handleGenerateQR}
+          disabled={actionButtonStatus}
+          onPress={handleActionButton}
           style={
-            generateButtonStatus
+            actionButtonStatus
               ? styles.generateQRButtonDisabled
               : styles.generateQRButton
           }
         >
           <Text style={styles.generateQRButtonText}>
-            Generate QR
+            { actionButtonText }
           </Text>
         </Pressable>
       </View>
@@ -107,4 +109,4 @@ function List(props: ListProps): React.ReactElement {
   );
 }
 
-export default memo(List);
+export default memo(ContactList);

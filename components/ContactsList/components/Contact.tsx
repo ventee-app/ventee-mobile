@@ -7,8 +7,8 @@ import {
   View,
 } from 'react-native';
 
-import { COLORS, SPACER } from '../../../../constants';
-import styles from '../../styles';
+import { COLORS, SPACER } from '../../../constants';
+import styles from '../styles';
 
 interface ContactProps {
   handleCheckBox: (id: string) => void;
