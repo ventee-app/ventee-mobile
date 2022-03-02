@@ -15,13 +15,15 @@ import {
 import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 import * as Contacts from 'expo-contacts';
 
+import ContactsList from '../../components/ContactsList';
 import context, { ContextStorage } from '../../store';
 import { EVENTS } from '../../constants';
 import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
+import Scanner from './components/Scanner';
 import Spinner from '../../components/Spinner';
 import styles from './styles';
 import useWebsockets from '../../hooks/use-websockets';
-import ContactsList from '../../components/ContactsList';
+import ActionComplete from '../../components/ActionComplete/ActionComplete';
 
 interface TransferContactsData {
   contacts: Contacts.Contact[];
@@ -37,12 +39,12 @@ function ReceiveContacts(): React.ReactElement {
   } = useContext<ContextStorage>(context);
   useWebsockets({ connection, dispatch });
 
+  const [contactsSaved, setContactsSaved] = useState<boolean>(false);
   const [loadedContacts, setLoadedContacts] = useState<ExtendedContact[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [scanned, setScanned] = useState<boolean>(false);
   const [scanning, setScanning] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
-  const [transferComplete, setTransferComplete] = useState<boolean>(false);
 
   const handleMessage = async (message: MessageEvent<string>): Promise<void> => {
     const parsed: WebsocketMessageData = JSON.parse(message.data);
@@ -87,13 +89,13 @@ function ReceiveContacts(): React.ReactElement {
     ],
   );
 
-  const handleCancelSaving = (): void => {
+  const handleReset = (): void => {
     setLoadedContacts([]);
     setLoading(false);
     setScanned(false);
     setScanning(false);
     setSearch('');
-    return setTransferComplete(false);
+    return setContactsSaved(false);
   };
 
   const handleCancelScanning = (): void => setScanning(false);
@@ -123,7 +125,7 @@ function ReceiveContacts(): React.ReactElement {
 
   const handleSaveContacts = useCallback(
     (): void => {
-      setTransferComplete(true);
+      setContactsSaved(true);
     },
     [loadedContacts],
   );
@@ -180,7 +182,7 @@ function ReceiveContacts(): React.ReactElement {
       { loading && (
         <Spinner />
       ) }
-      { !loading && !scanned && !scanning && (
+      { !loading && !scanned && !scanning && !contactsSaved && (
         <Pressable
           onPress={handleStartScanning}
           style={styles.button}
@@ -190,28 +192,20 @@ function ReceiveContacts(): React.ReactElement {
           </Text>
         </Pressable>
       ) }
-      { !loading && !scanned && scanning && (
-        <>
-          <BarCodeScanner
-            onBarCodeScanned={scanned ? undefined : handleScanningResult}
-            style={styles.scanner}
-          />
-          <Pressable
-            onPress={handleCancelScanning}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>
-              Cancel
-            </Text>
-          </Pressable>
-        </>
+      { !loading && !scanned && scanning && !contactsSaved && (
+        <Scanner
+          handleCancelScanning={handleCancelScanning}
+          handleScanningResult={handleScanningResult}
+          scanned={scanned}
+        />
       ) }
-      { !loading && scanned && !scanning && loadedContacts.length > 0 && (
+      { !loading && scanned && !scanning && !contactsSaved
+        && loadedContacts.length > 0 && (
         <ContactsList
           actionButtonText="Save"
           contacts={loadedContacts}
           handleActionButton={handleSaveContacts}
-          handleCancel={handleCancelSaving}
+          handleCancel={handleReset}
           handleCheckAll={handleCheckAll}
           handleCheckBox={handleCheckBox}
           handleClearSearch={handleClearSearch}
@@ -219,6 +213,12 @@ function ReceiveContacts(): React.ReactElement {
           searchValue={search}
           setSearch={setSearch}
           type="receive"
+        />
+      ) }
+      { !loading && contactsSaved && (
+        <ActionComplete
+          actionText="Contacts saved!"
+          handleClose={handleReset}
         />
       ) }
     </View>
