@@ -15,12 +15,14 @@ interface ContactListProps {
   actionButtonText: string;
   contacts: ExtendedContact[];
   handleActionButton: () => void;
+  handleCancel?: (() => void) | null;
   handleCheckAll: () => void;
   handleCheckBox: (id: string) => void;
   handleClearSearch: () => void;
   handleUncheckAll: () => void;
   searchValue: string;
   setSearch: (value: string) => void;
+  type?: string;
 }
 
 function ContactList(props: ContactListProps): React.ReactElement {
@@ -28,12 +30,14 @@ function ContactList(props: ContactListProps): React.ReactElement {
     actionButtonText,
     contacts,
     handleActionButton,
+    handleCancel,
     handleCheckAll,
     handleCheckBox,
     handleClearSearch,
     handleUncheckAll,
     searchValue,
     setSearch,
+    type,
   } = props;
 
   const renderItem = ({ item }: any): React.ReactElement => (
@@ -91,6 +95,16 @@ function ContactList(props: ContactListProps): React.ReactElement {
             Unheck all
           </Text>
         </Pressable>
+        { type === 'receive' && handleCancel && (
+          <Pressable
+            onPress={handleCancel}
+            style={styles.checkButton}
+          >
+            <Text style={styles.checkButtonText}>
+              Cancel
+            </Text>
+          </Pressable>
+        ) }
         <Pressable
           disabled={actionButtonStatus}
           onPress={handleActionButton}
@@ -108,5 +122,10 @@ function ContactList(props: ContactListProps): React.ReactElement {
     </>
   );
 }
+
+ContactList.defaultProps = {
+  handleCancel: null,
+  type: 'share',
+};
 
 export default memo(ContactList);

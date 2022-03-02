@@ -21,9 +21,9 @@ function TransferComplete(props: TransferCompleteProps): React.ReactElement {
   return (
     <View style={styles.emptyListContainer}>
       <FontAwesome
+        color={COLORS.accent}
         name="check"
         size={SPACER * 10}
-        color={COLORS.accent}
       />
       <Text style={styles.contactsTransferredText}>
         Contacts transferred!

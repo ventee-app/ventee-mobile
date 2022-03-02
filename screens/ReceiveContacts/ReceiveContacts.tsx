@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import {
   Alert,
+  Keyboard,
   Pressable,
   Text,
   View,
@@ -20,6 +21,7 @@ import { ExtendedContact, WebsocketMessageData } from '../../types/data-models';
 import Spinner from '../../components/Spinner';
 import styles from './styles';
 import useWebsockets from '../../hooks/use-websockets';
+import ContactsList from '../../components/ContactsList';
 
 interface TransferContactsData {
   contacts: Contacts.Contact[];
@@ -39,6 +41,8 @@ function ReceiveContacts(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(true);
   const [scanned, setScanned] = useState<boolean>(false);
   const [scanning, setScanning] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>('');
+  const [transferComplete, setTransferComplete] = useState<boolean>(false);
 
   const handleMessage = async (message: MessageEvent<string>): Promise<void> => {
     const parsed: WebsocketMessageData = JSON.parse(message.data);
@@ -47,6 +51,7 @@ function ReceiveContacts(): React.ReactElement {
       && parsed.data && parsed.issuer
       && parsed.target === connectionId) {
       const payload: TransferContactsData = JSON.parse(parsed.data);
+
       setLoadedContacts(payload.contacts.map((item: Contacts.Contact): ExtendedContact => ({
         ...item,
         isChecked: true,
@@ -82,7 +87,46 @@ function ReceiveContacts(): React.ReactElement {
     ],
   );
 
+  const handleCancelSaving = (): void => {
+    setLoadedContacts([]);
+    setLoading(false);
+    setScanned(false);
+    setScanning(false);
+    setSearch('');
+    return setTransferComplete(false);
+  };
+
   const handleCancelScanning = (): void => setScanning(false);
+
+  const handleCheckAll = (): void => setLoadedContacts(
+    (state: ExtendedContact[]): ExtendedContact[] => state.map(
+      (item: ExtendedContact): ExtendedContact => ({
+        ...item,
+        isChecked: true,
+      }),
+    ),
+  );
+
+  const handleCheckBox = (id: string): void => setLoadedContacts(
+    (state: ExtendedContact[]): ExtendedContact[] => state.map(
+      (item: ExtendedContact): ExtendedContact => ({
+        ...item,
+        isChecked: item.id === id ? !item.isChecked : item.isChecked,
+      }),
+    ),
+  );
+
+  const handleClearSearch = (): void => {
+    Keyboard.dismiss();
+    return setSearch('');
+  };
+
+  const handleSaveContacts = useCallback(
+    (): void => {
+      setTransferComplete(true);
+    },
+    [loadedContacts],
+  );
 
   const handleScanningResult = useCallback(
     (result: BarCodeScannerResult): void => {
@@ -122,6 +166,15 @@ function ReceiveContacts(): React.ReactElement {
     return setScanning(true);
   };
 
+  const handleUncheckAll = (): void => setLoadedContacts(
+    (state: ExtendedContact[]): ExtendedContact[] => state.map(
+      (item: ExtendedContact): ExtendedContact => ({
+        ...item,
+        isChecked: false,
+      }),
+    ),
+  );
+
   return (
     <View style={styles.container}>
       { loading && (
@@ -154,11 +207,19 @@ function ReceiveContacts(): React.ReactElement {
         </>
       ) }
       { !loading && scanned && !scanning && loadedContacts.length > 0 && (
-        <View>
-          <Text>
-            { `Total: ${loadedContacts.length} contacts received` }
-          </Text>
-        </View>
+        <ContactsList
+          actionButtonText="Save"
+          contacts={loadedContacts}
+          handleActionButton={handleSaveContacts}
+          handleCancel={handleCancelSaving}
+          handleCheckAll={handleCheckAll}
+          handleCheckBox={handleCheckBox}
+          handleClearSearch={handleClearSearch}
+          handleUncheckAll={handleUncheckAll}
+          searchValue={search}
+          setSearch={setSearch}
+          type="receive"
+        />
       ) }
     </View>
   );

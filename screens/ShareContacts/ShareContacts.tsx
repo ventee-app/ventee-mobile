@@ -111,17 +111,23 @@ function ShareContacts(): React.ReactElement {
     const parsed: WebsocketMessageData = JSON.parse(message.data);
 
     if (parsed.event === EVENTS.requestContacts
-        && parsed.issuer && parsed.target) {
+      && parsed.issuer && parsed.target && parsed.target === connectionId) {
       setLoading(true);
       if (connection && connectionId) {
-        connection.send(JSON.stringify({
-          data: JSON.stringify({
-            contacts: contactsData.filter((item: ExtendedContact): boolean => item.isChecked),
-          }),
-          event: EVENTS.transferContacts,
-          issuer: connectionId,
-          target: parsed.issuer,
-        }));
+        setContactsData((state: ExtendedContact[]): ExtendedContact[] => {
+          connection.send(JSON.stringify({
+            data: JSON.stringify({
+              contacts: state.filter(
+                (item: ExtendedContact): boolean => item.isChecked,
+              ),
+            }),
+            event: EVENTS.transferContacts,
+            issuer: connectionId,
+            target: parsed.issuer,
+          }));
+
+          return state;
+        });
       }
     }
 
@@ -179,6 +185,7 @@ function ShareContacts(): React.ReactElement {
           handleUncheckAll={handleUncheckAll}
           searchValue={search}
           setSearch={setSearch}
+          type="share"
         />
       ) }
       { !loading && !readyForTransfer
