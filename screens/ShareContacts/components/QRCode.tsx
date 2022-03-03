@@ -2,11 +2,11 @@ import React, { memo } from 'react';
 import QR from 'react-native-qrcode-svg';
 import {
   Dimensions,
-  Pressable,
   Text,
   View,
 } from 'react-native';
 
+import BigButton from '../../../components/BigButton';
 import styles from '../styles';
 
 interface QRCodeProps {
@@ -31,14 +31,11 @@ function QRCode(props: QRCodeProps): React.ReactElement {
         size={Math.floor(Dimensions.get('screen').width * 0.8)}
         value={value}
       />
-      <Pressable
-        onPress={handleCloseQR}
-        style={styles.closeQRCodeButton}
-      >
-        <Text style={styles.generateQRButtonText}>
-          Cancel
-        </Text>
-      </Pressable>
+      <BigButton
+        buttonStyles={styles.closeQRCodeButton}
+        handlePress={handleCloseQR}
+        text="Cancel"
+      />
     </View>
   );
 }

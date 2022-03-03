@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
-import { Pressable, Text } from 'react-native';
 
+import BigButton from '../../../components/BigButton';
 import styles from '../styles';
 
 interface ScannerProps {
@@ -23,14 +23,10 @@ function Scanner(props: ScannerProps): React.ReactElement {
         onBarCodeScanned={scanned ? undefined : handleScanningResult}
         style={styles.scanner}
       />
-      <Pressable
-        onPress={handleCancelScanning}
-        style={styles.button}
-      >
-        <Text style={styles.buttonText}>
-          Cancel
-        </Text>
-      </Pressable>
+      <BigButton
+        handlePress={handleCancelScanning}
+        text="Cancel"
+      />
     </>
   );
 }

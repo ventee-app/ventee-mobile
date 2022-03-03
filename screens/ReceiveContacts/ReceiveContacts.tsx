@@ -8,13 +8,13 @@ import React, {
 import {
   Alert,
   Keyboard,
-  Pressable,
-  Text,
   View,
 } from 'react-native';
 import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 import * as Contacts from 'expo-contacts';
 
+import ActionComplete from '../../components/ActionComplete';
+import BigButton from '../../components/BigButton/BigButton';
 import ContactsList from '../../components/ContactsList';
 import context, { ContextStorage } from '../../store';
 import { EVENTS } from '../../constants';
@@ -23,7 +23,6 @@ import Scanner from './components/Scanner';
 import Spinner from '../../components/Spinner';
 import styles from './styles';
 import useWebsockets from '../../hooks/use-websockets';
-import ActionComplete from '../../components/ActionComplete/ActionComplete';
 
 interface TransferContactsData {
   contacts: Contacts.Contact[];
@@ -124,8 +123,15 @@ function ReceiveContacts(): React.ReactElement {
   };
 
   const handleSaveContacts = useCallback(
-    (): void => {
-      setContactsSaved(true);
+    async (): Promise<void> => {
+      setLoading(true);
+      await Promise.all(
+        loadedContacts.map(
+          (contact: ExtendedContact): Promise<string> => Contacts.addContactAsync(contact),
+        ),
+      );
+      setLoading(false);
+      return setContactsSaved(true);
     },
     [loadedContacts],
   );
@@ -183,14 +189,10 @@ function ReceiveContacts(): React.ReactElement {
         <Spinner />
       ) }
       { !loading && !scanned && !scanning && !contactsSaved && (
-        <Pressable
-          onPress={handleStartScanning}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>
-            Scan code
-          </Text>
-        </Pressable>
+        <BigButton
+          handlePress={handleStartScanning}
+          text="Scan code"
+        />
       ) }
       { !loading && !scanned && scanning && !contactsSaved && (
         <Scanner

@@ -9,10 +9,6 @@ export default StyleSheet.create({
     justifyContent: 'flex-start',
     width: '100%',
   },
-  generateQRButtonText: {
-    color: COLORS.textInverted,
-    textAlign: 'center',
-  },
   emptyListContainer: {
     alignItems: 'center',
     flex: 1,
@@ -25,19 +21,12 @@ export default StyleSheet.create({
     textAlign: 'center',
   },
   closeQRCodeButton: {
-    backgroundColor: COLORS.accent,
     marginTop: SPACER * 2,
-    padding: SPACER,
-    width: '80%',
   },
   transferAmountText: {
     color: COLORS.text,
     fontSize: SPACER,
     marginBottom: SPACER * 2,
     textAlign: 'center',
-  },
-  contactsTransferredText: {
-    fontSize: SPACER + SPACER / 4,
-    marginVertical: SPACER * 2,
   },
 });

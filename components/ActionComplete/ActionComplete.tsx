@@ -1,11 +1,8 @@
 import React, { memo } from 'react';
 import { FontAwesome } from '@expo/vector-icons';
-import {
-  Pressable,
-  Text,
-  View,
-} from 'react-native';
+import { Text, View } from 'react-native';
 
+import BigButton from '../BigButton';
 import { COLORS, SPACER } from '../../constants';
 import styles from './styles';
 
@@ -30,14 +27,11 @@ function ActionComplete(props: ActionCompleteProps): React.ReactElement {
       <Text style={styles.actionCompleteText}>
         { actionText }
       </Text>
-      <Pressable
-        onPress={handleClose}
-        style={styles.closeButton}
-      >
-        <Text style={styles.closeButtonText}>
-          Close
-        </Text>
-      </Pressable>
+      <BigButton
+        buttonStyles={styles.closeButton}
+        handlePress={handleClose}
+        text="Close"
+      />
     </View>
   );
 }

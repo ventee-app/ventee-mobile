@@ -1,18 +1,8 @@
 import { StyleSheet } from 'react-native';
 
-import { COLORS, SPACER } from '../../constants';
+import { COLORS } from '../../constants';
 
 export default StyleSheet.create({
-  button: {
-    backgroundColor: COLORS.accent,
-    margin: SPACER,
-    padding: SPACER,
-    width: '80%',
-  },
-  buttonText: {
-    color: COLORS.textInverted,
-    textAlign: 'center',
-  },
   container: {
     alignItems: 'center',
     backgroundColor: COLORS.background,

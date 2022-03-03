@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import * as Contacts from 'expo-contacts';
 
+import ActionComplete from '../../components/ActionComplete';
 import context, { ContextStorage } from '../../store';
 import EmptyList from './components/EmptyList';
 import { EVENTS } from '../../constants';
@@ -19,7 +20,6 @@ import ContactsList from '../../components/ContactsList';
 import QRCode from './components/QRCode';
 import Spinner from '../../components/Spinner';
 import styles from './styles';
-import TransferComplete from './components/TransferComplete';
 import useWebsockets from '../../hooks/use-websockets';
 
 async function getContacts(): Promise<null | Contacts.ContactResponse> {
@@ -203,7 +203,10 @@ function ShareContacts(): React.ReactElement {
         />
       ) }
       { !loading && transferComplete && (
-        <TransferComplete handleClose={handleCloseTransferComplete} />
+        <ActionComplete
+          actionText="Transfer complete!"
+          handleClose={handleCloseTransferComplete}
+        />
       ) }
     </View>
   );
