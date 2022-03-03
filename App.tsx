@@ -2,10 +2,14 @@ import React, { memo, useMemo, useReducer } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
+import Context, {
+  ContextStorage,
+  initialState,
+  reducer,
+} from './store';
 import Navigation from './navigation';
 import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
-import Context, { ContextStorage, initialState, reducer } from './store';
 
 function App(): React.ReactElement | null {
   const colorScheme = useColorScheme(); // TODO: remove
