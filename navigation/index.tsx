@@ -1,32 +1,59 @@
-import { FontAwesome } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as React from 'react';
-import { ColorSchemeName, Pressable } from 'react-native';
-
-import { COLORS } from '../constants';
+import { ColorSchemeName, Pressable, ViewStyle } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { FontAwesome } from '@expo/vector-icons';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 
 import About from '../screens/About';
-import Colors from '../constants/Colors';
-import useColorScheme from '../hooks/useColorScheme';
-import ReceiveContactsScreen from '../screens/ReceiveContacts';
-import ShareContactsScreen from '../screens/ShareContacts';
-import { RootStackParamList, RootTabParamList, RootTabScreenProps } from '../types';
+import { COLORS } from '../constants';
 import LinkingConfiguration from './LinkingConfiguration';
+import ReceiveContactsScreen from '../screens/ReceiveContacts';
+import {
+  RootStackParamList,
+  RootTabParamList,
+  RootTabScreenProps,
+} from '../types/navigation';
+import ShareContactsScreen from '../screens/ShareContacts';
 
 const BottomTab = createBottomTabNavigator<RootTabParamList>();
 
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={30} style={{ marginBottom: -3 }} {...props} />;
+function BottomBarIcon(
+  color: string,
+  name: React.ComponentProps<typeof FontAwesome>['name'],
+): React.ReactElement {
+  return (
+    <FontAwesome
+      color={color}
+      name={name}
+      size={30}
+      style={{ marginBottom: -3 }}
+    />
+  );
+}
+
+function HeaderRight(
+  props: RootTabScreenProps<'ReceiveContacts'>,
+): React.ReactElement {
+  const { navigation } = props;
+  return (
+    <Pressable
+      onPress={(): void => navigation.navigate('About')}
+      style={({ pressed }): ViewStyle => ({
+        opacity: pressed ? 0.5 : 1,
+      })}
+    >
+      <FontAwesome
+        color={COLORS.text}
+        name="ellipsis-v"
+        size={24}
+        style={{ marginRight: 24 }}
+      />
+    </Pressable>
+  );
 }
 
 function BottomTabNavigator() {
-  const colorScheme = useColorScheme();
-
   return (
     <BottomTab.Navigator
       initialRouteName="ShareContacts"
@@ -50,36 +77,22 @@ function BottomTabNavigator() {
           headerStyle: {
             backgroundColor: COLORS.background,
           },
-          tabBarIcon: ({ color }) => <TabBarIcon name="share-square-o" color={color} />,
+          tabBarIcon: ({ color }) => BottomBarIcon(color, 'share-square-o'),
         }}
       />
       <BottomTab.Screen
-        name="ReceiveContacts"
         component={ReceiveContactsScreen}
-        options={({ navigation }: RootTabScreenProps<'ReceiveContacts'>) => ({
-          title: 'Receive contacts',
-          tabBarIcon: ({ color }) => <TabBarIcon name="qrcode" color={color} />,
-          headerTitleStyle: {
-            color: COLORS.text,
-          },
+        name="ReceiveContacts"
+        options={(props: RootTabScreenProps<'ReceiveContacts'>) => ({
+          headerRight: () => HeaderRight(props),
           headerStyle: {
             backgroundColor: COLORS.background,
           },
-          headerRight: () => (
-            <Pressable
-              onPress={() => navigation.navigate('About')}
-              style={({ pressed }) => ({
-                opacity: pressed ? 0.5 : 1,
-              })}
-            >
-              <FontAwesome
-                name="ellipsis-v"
-                size={25}
-                color={Colors[colorScheme].text}
-                style={{ marginRight: 24 }}
-              />
-            </Pressable>
-          ),
+          headerTitleStyle: {
+            color: COLORS.text,
+          },
+          tabBarIcon: ({ color }) => BottomBarIcon(color, 'qrcode'),
+          title: 'Receive contacts',
         })}
       />
     </BottomTab.Navigator>
@@ -106,7 +119,9 @@ function RootNavigator() {
   );
 }
 
-export default function Navigation({ colorScheme }: { colorScheme: ColorSchemeName }) {
+export default function Navigation(
+  { colorScheme }: { colorScheme: ColorSchemeName },
+) {
   return (
     <NavigationContainer
       linking={LinkingConfiguration}

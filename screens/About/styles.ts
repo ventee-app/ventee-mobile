@@ -16,13 +16,13 @@ export default StyleSheet.create({
   },
   description: {
     color: COLORS.text,
-    fontSize: SPACER + SPACER / 2,
+    fontSize: SPACER + SPACER / 4,
     marginTop: SPACER,
     textAlign: 'center',
   },
   linkText: {
     color: COLORS.accent,
-    fontSize: SPACER + SPACER / 2,
+    fontSize: SPACER + SPACER / 4,
     textDecorationLine: 'underline',
   },
   linkWrap: {

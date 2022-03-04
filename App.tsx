@@ -12,7 +12,7 @@ import useCachedResources from './hooks/useCachedResources';
 import useColorScheme from './hooks/useColorScheme';
 
 function App(): React.ReactElement | null {
-  const colorScheme = useColorScheme(); // TODO: remove
+  const colorScheme = useColorScheme();
   const isLoadingComplete = useCachedResources();
 
   const [state, dispatch] = useReducer(reducer, initialState);
